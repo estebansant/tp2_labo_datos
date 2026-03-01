@@ -8,7 +8,6 @@ Integrantes: Tobías Passarelli, Santiago Pizzani Esteban
 import pandas as pd
 import numpy as np
 import os
-import seaborn as sns
 import matplotlib.pyplot as plt
 import math
 from sklearn.model_selection import train_test_split
@@ -337,29 +336,6 @@ print(f"Total de datos originales: {len(df_ol)}")
 print(f"Datos para entrenamiento (X_train): {len(X_train)} filas")
 print(f"Datos para prueba (X_test): {len(X_test)} filas")
 
-# CODIGO DE EJEMPLO DEL LIBRO
-"""
-training_accuracy = []
-test_accuracy = []
-# try n_neighbors from 1 to 10
-neighbors_settings = range(1, 11)
-for n_neighbors in neighbors_settings:
-    # Construyo el modelo
-    clf = KNeighborsClassifier(n_neighbors=n_neighbors)
-    clf.fit(X_train, y_train)
-    # Veo precision de train
-    training_accuracy.append(clf.score(X_train, y_train))
-    # Veo precision de test
-    test_accuracy.append(clf.score(X_test, y_test))
-    
-plt.plot(neighbors_settings, training_accuracy, label="training accuracy")
-plt.plot(neighbors_settings, test_accuracy, label="test accuracy")
-plt.ylabel("Accuracy")
-plt.xlabel("n_neighbors")
-plt.legend()
-"""
-
-
 varianza_ol = X_train.var().sort_values(ascending=False)
 
 # Los indices de los pixeles que mas varian
@@ -403,7 +379,7 @@ for nombre, atributos in subconjuntos.items():
     precision_test.append(accuracy_score(y_test, predicciones_test))
 
 
-# Plot para el grafico con data de precision. Igual creo que le falta un poco de trabajo a este codigo para dejarlo del todo bien
+# Plot para el grafico con data de precision. 
 nombres = list(subconjuntos.keys())
 x = np.arange(len(nombres))
 ancho = 0.35
@@ -430,3 +406,115 @@ ax.set_ylim(0, 1.1)
 ax.legend()
 plt.tight_layout()
 plt.show()
+
+# %%
+
+# Ahora quiero ver como cambia la precision para distintas cantidades de atributos seleccionados de varias partes de los pixeles (mayor y menor varianza)
+subconjuntos_mejor_varianza = {
+    '3 Pixeles (Comunes)': top_pixeles[:3],
+    '10 Pixeles (Comunes)': top_pixeles[:10],
+    '50 Pixeles (Comunes)': top_pixeles[:50],
+    '100 Pixeles (Comunes)': top_pixeles[:100],
+    '200 Pixeles (Comunes)': top_pixeles[:200],
+}
+
+subconjuntos_peor_varianza = {
+    '3 Pixeles (Menos Comunes)': top_pixeles[-3:],
+    '10 Pixeles (Menos Comunes)': top_pixeles[-10:],
+    '50 Pixeles (Menos Comunes)': top_pixeles[-50:],
+    '100 Pixeles (Menos Comunes)': top_pixeles[-100:],
+    '200 Pixeles (Menos Comunes)': top_pixeles[-200:],
+}
+
+# Para los pixeles con mayor varianza
+
+precision_train_mejores = []
+precision_test_mejores = []
+
+knn = KNeighborsClassifier(n_neighbors=3)
+
+for nombre, atributos in subconjuntos_mejor_varianza.items():
+    # Construir modelo. De esta forma solo tengo los 3 pixeles seleccionados para armar mi modelo (cada modelo tiene 3 pixeles)
+    knn.fit(X_train[atributos], y_train)
+
+    # Precision en train data
+    predicciones_train = knn.predict(X_train[atributos])
+    precision_train_mejores.append(accuracy_score(y_train, predicciones_train))
+
+    # Probar modelo con test data
+    predicciones_test = knn.predict(X_test[atributos])
+    precision_test_mejores.append(accuracy_score(y_test, predicciones_test))
+
+# Ahora repito para los pixeles de menor varianza
+
+precision_train_peores = []
+precision_test_peores = []
+
+knn = KNeighborsClassifier(n_neighbors=3)
+
+for nombre, atributos in subconjuntos_peor_varianza.items():
+    # Construir modelo. De esta forma solo tengo los 3 pixeles seleccionados para armar mi modelo (cada modelo tiene 3 pixeles)
+    knn.fit(X_train[atributos], y_train)
+
+    # Precision en train data
+    predicciones_train = knn.predict(X_train[atributos])
+    precision_train_peores.append(accuracy_score(y_train, predicciones_train))
+
+    # Probar modelo con test data
+    predicciones_test = knn.predict(X_test[atributos])
+    precision_test_peores.append(accuracy_score(y_test, predicciones_test))
+
+cantidades = [3,10,50,100,200]
+# Gráfico de Líneas
+plt.figure(figsize=(14, 8))
+plt.plot(cantidades, precision_train_mejores, marker='o', linewidth=3, markersize=10,
+         label='Train Data | Píxeles con Mayor Varianza', color='#1F77B4', linestyle='--')
+plt.plot(cantidades, precision_test_mejores, marker='s', linewidth=3, markersize=10,
+         label='Test Data | Píxeles con Mayor Varianza', color='#1F77B4')
+plt.plot(cantidades, precision_test_peores, marker='s', linewidth=3, markersize=10,
+         label='Test Data | Píxeles Menor Varianza', color='#FF7F0E')
+plt.plot(cantidades, precision_train_peores, marker='o', linewidth=3, markersize=10,
+         label='Train Data | Píxeles Menor Varianza', color='#FF7F0E', linestyle='--')
+
+plt.xlabel('Cantidad de Píxeles Utilizados', fontsize=18)
+plt.ylabel('Exactitud', fontsize=18)
+plt.xticks(cantidades, fontsize=16)
+plt.yticks(fontsize=16)
+plt.legend(fontsize=16)
+plt.grid(True, linestyle='--', alpha=0.6)
+plt.show()
+
+# %% EJERCICIO 2.d: Variando el hiperparámetro K
+# Usaremos el mejor conjunto de atributos (ej: Top 50) para buscar el mejor K
+
+mejor_subconjunto = top_pixeles[:50]
+k_range = range(1, 21)  # Probamos de 1 a 20 vecinos
+acc_train_k = []
+acc_test_k = []
+
+for k in k_range:
+    knn_k = KNeighborsClassifier(n_neighbors=k)
+    knn_k.fit(X_train[mejor_subconjunto], y_train)
+
+    acc_train_k.append(accuracy_score(
+        y_train, knn_k.predict(X_train[mejor_subconjunto])))
+    acc_test_k.append(accuracy_score(
+        y_test, knn_k.predict(X_test[mejor_subconjunto])))
+
+# --- Gráfico de Curva de Complejidad para 2.d ---
+plt.figure(figsize=(14, 8))
+plt.plot(k_range, acc_train_k, label='Train Data',
+         marker='o', linestyle='--', linewidth=3, markersize=10)
+plt.plot(k_range, acc_test_k, label='Test Data', marker='s', linewidth=3, markersize=10)
+plt.xlabel('Valor de K', fontsize=18)
+plt.ylabel('Exactitud', fontsize=18)
+plt.xticks(k_range, fontsize=16)
+plt.yticks(fontsize=16)
+plt.legend(fontsize=16)
+plt.grid(True, linestyle='--', alpha=0.6)
+plt.show()
+
+# Identificar el mejor K
+mejor_k = k_range[np.argmax(acc_test_k)]
+print(
+    f"El mejor valor de K encontrado es: {mejor_k} con una exactitud de {max(acc_test_k):.4f}")
