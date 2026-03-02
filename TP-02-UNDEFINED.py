@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Integrantes: Tob�as Passarelli, Santiago Pizzani Esteban
+Integrantes: Tobías Passarelli, Santiago Pizzani Esteban
 
 
 """
@@ -42,8 +42,8 @@ print(df['label'].value_counts().sort_index())
 
 cuentas = df['label'].value_counts().sort_index()
 
-# Imprimir el m��nimo y m�ximo para el informe
-print(f"Clase con m�s datos: {cuentas.max()}")
+# Imprimir el mí­nimo y máximo para el informe
+print(f"Clase con más datos: {cuentas.max()}")
 print(f"Clase con menos datos: {cuentas.min()}")
 
 # Verificar nulos (PODRIA IR CON LA VARIABLE DUPLICADOS)
@@ -53,7 +53,7 @@ print(f"Cantidad de valores nulos: {nulos_totales}")
 # Rango de los pixeles
 valor_min = df.iloc[:, 1:].values.min()
 valor_max = df.iloc[:, 1:].values.max()
-print(f"Rango de valores de p�xeles: [{valor_min}, {valor_max}]")
+print(f"Rango de valores de píxeles: [{valor_min}, {valor_max}]")
 print('es de 0 a 255')
 
 # Chequeo de filas duplicadas
@@ -62,7 +62,7 @@ print(f"Cantidad de filas duplicadas: {duplicados}")
 
 # %%
 
-# Mapeo de label num�rico a letra
+# Mapeo de label numérico a letra
 label_a_letra = {}
 
 for i in range(26):
@@ -91,7 +91,7 @@ plt.show()
 # 1.a)
 # Cantidad de datos y clases
 print(f"Instancias: {df.shape[0]}, Atributos: {df.shape[1]}")
-print(f"Letras �nicas: {df['label'].nunique()}")
+print(f"Letras Únicas: {df['label'].nunique()}")
 
 # Separar lo que nos interesa del resto
 y = df.iloc[:, 0]
@@ -136,8 +136,8 @@ mapping = {
     13: 'N', 10: 'K',  5: 'F'
 }
 """
-Encapsulamos el filtrado por etiqueta, el c�lculo de la "letra promedio" mediante .mean(), 
-la generaci�n de la imagen diferencia (np.abs) y el c�lculo de la distancia euclidea.
+Encapsulamos el filtrado por etiqueta, el cálculo de la "letra promedio" mediante .mean(), 
+la generación de la imagen diferencia (np.abs) y el cálculo de la distancia euclidea.
 """
 def analizar_similitud(id1, id2, mapping):
     img1 = df[df['label'] == id1].iloc[:, 1:].mean().values.reshape(28, 28)
@@ -180,7 +180,7 @@ dist_kf = analizar_similitud(10,  5, mapping)
 pares = ['O vs Q', 'S vs M', 'P vs B', 'D vs O', 'A vs N', 'K vs F']
 distancias = [dist_oq, dist_sm, dist_pb, dist_do, dist_an, dist_kf]
 
-# Funci�n para ordenar los pares por su distancia
+# Función para ordenar los pares por su distancia
 def ordenar(item):
     return item[1]
 
@@ -193,7 +193,7 @@ distancias_ordenadas = [x[1] for x in resumen]
 
 plt.figure(figsize=(10, 5))
 bars = plt.bar(pares_ordenados, distancias_ordenadas)
-plt.ylabel("Distancia Eucl��dea")
+plt.ylabel("Distancia Euclí­dea")
 
 # Agregar el valor encima de cada barra
 for bar, val in zip(bars, distancias_ordenadas):
@@ -229,15 +229,15 @@ subset = df[df['label'] == 9].iloc[:, 1:]
 std_image = subset.std().values.reshape(28, 28)
 plt.imshow(std_image, cmap='hot')
 plt.colorbar()
-plt.xlabel('P��xeles en eje X')
-plt.ylabel('P��xeles en eje Y')
+plt.xlabel('Pí­xeles en eje X')
+plt.ylabel('Pí­xeles en eje Y')
 plt.show()
 
-# M�tricas para el informe (Cuantificaci�n de la variabilidad)
+# Métricas para el informe (Cuantificación de la variabilidad)
 std_por_pixel = df_j.iloc[:, 1:].std()
-print(f"Desv�o est�ndar promedio por p�xel: {std_por_pixel.mean():.2f}")
+print(f"Desvío estándar promedio por píxel: {std_por_pixel.mean():.2f}")
 
-# C�lculo de distancias a la J promedio
+# Cálculo de distancias a la J promedio
 j_promedio = df_j.iloc[:, 1:].mean().values
 distancias = np.linalg.norm(df_j.iloc[:, 1:].values - j_promedio, axis=1)
 
@@ -248,12 +248,12 @@ print(f"Distancia promedio a la J promedio: {distancias.mean():.2f}")
 std_por_pixel = df_j.std()
 
 print("Variabilidad de J")
-print(f"Total de im�genes: {len(df_j)}")
+print(f"Total de imágenes: {len(df_j)}")
 
-print(f"Std m�xima (p��xel m�s variable): {std_por_pixel.max():.2f}")
+print(f"Std máxima (pí­xel más variable): {std_por_pixel.max():.2f}")
 
 #NO TENEMOS EN CUENTA A LA COLUMNA LABEL NI A LAS QUE NUNCA VARIAN
-print(f"Std m��nima (p�xel m�s estable): {std_por_pixel[std_por_pixel > 0].min():.2f}")
+print(f"Std mí­nima (píxel más estable): {std_por_pixel[std_por_pixel > 0].min():.2f}")
 
 # Agarro el promedio
 j_promedio = df_j.mean().values
@@ -262,8 +262,8 @@ j_promedio = df_j.mean().values
 
 
 
-print(f"Distancia m�xima a la J promedio:   {distancias.max():.2f}")
-print(f"Distancia m��nima a la J promedio:   {distancias.min():.2f}")
+print(f"Distancia máxima a la J promedio:   {distancias.max():.2f}")
+print(f"Distancia mí­nima a la J promedio:   {distancias.min():.2f}")
 
 cantidad_bins = math.ceil(np.sqrt(len(distancias)))
 
@@ -272,8 +272,8 @@ plt.figure(figsize=(8, 4))
 plt.hist(distancias, bins=cantidad_bins, color='steelblue', edgecolor='white')
 plt.axvline(distancias.mean(), color='red', linestyle='--',
             label=f'Media: {distancias.mean():.1f}')
-plt.xlabel("Distancia Eucl��dea a la J promedio")
-plt.ylabel("Cantidad de im�genes")
+plt.xlabel("Distancia Euclí­dea a la J promedio")
+plt.ylabel("Cantidad de imágenes")
 plt.legend()
 plt.tight_layout()
 plt.show()
@@ -302,7 +302,7 @@ print(df_ol['label'].value_counts().sort_index())
 
 cuentas = df_ol['label'].value_counts().sort_index()
 
-# Imprimir el mínimo y máximo para el informe
+# Imprimir el mÃ­nimo y mÃ¡ximo para el informe
 print(f"Clase con más datos: {cuentas.max()}")
 print(f"Clase con menos datos: {cuentas.min()}")
 
@@ -346,7 +346,7 @@ print(top_pixeles[:10])
 
 sub1 = top_pixeles[:3]
 
-# Los 3 píxeles con MENOS varianza
+# Los 3 pÃ­xeles con MENOS varianza
 sub2 = top_pixeles[-3:]
 
 # 3 pixeles al azar (puedes elegir cualquier otro si quieres para probar tobias)
@@ -438,11 +438,11 @@ for nombre, atributos in subconjuntos_mejor_varianza.items():
 
     # Precision en train data
     predicciones_train = knn.predict(X_train[atributos])
-    precision_train_mejores.append(accuracy_score(y_train, predicciones_train))
+    precision_train_mejores.append(accuracy_score(y_train, predicciones_train)*100)
 
     # Probar modelo con test data
     predicciones_test = knn.predict(X_test[atributos])
-    precision_test_mejores.append(accuracy_score(y_test, predicciones_test))
+    precision_test_mejores.append(accuracy_score(y_test, predicciones_test)*100)
 
 # Ahora repito para los pixeles de menor varianza
 
@@ -457,14 +457,14 @@ for nombre, atributos in subconjuntos_peor_varianza.items():
 
     # Precision en train data
     predicciones_train = knn.predict(X_train[atributos])
-    precision_train_peores.append(accuracy_score(y_train, predicciones_train))
+    precision_train_peores.append(accuracy_score(y_train, predicciones_train)*100)
 
     # Probar modelo con test data
     predicciones_test = knn.predict(X_test[atributos])
-    precision_test_peores.append(accuracy_score(y_test, predicciones_test))
+    precision_test_peores.append(accuracy_score(y_test, predicciones_test)*100)
 
 cantidades = [3,10,50,100,200]
-# Gráfico de Líneas
+# GrÃ¡fico de LÃ­neas
 plt.figure(figsize=(14, 8))
 plt.plot(cantidades, precision_train_mejores, marker='o', linewidth=3, markersize=10,
          label='Train Data | Píxeles con Mayor Varianza', color='#1F77B4', linestyle='--')
@@ -476,14 +476,14 @@ plt.plot(cantidades, precision_train_peores, marker='o', linewidth=3, markersize
          label='Train Data | Píxeles Menor Varianza', color='#FF7F0E', linestyle='--')
 
 plt.xlabel('Cantidad de Píxeles Utilizados', fontsize=18)
-plt.ylabel('Exactitud', fontsize=18)
+plt.ylabel('Exactitud (%)', fontsize=18)
 plt.xticks(cantidades, fontsize=16)
 plt.yticks(fontsize=16)
 plt.legend(fontsize=16)
 plt.grid(True, linestyle='--', alpha=0.6)
 plt.show()
 
-# %% EJERCICIO 2.d: Variando el hiperparámetro K
+# %% EJERCICIO 2.d: Variando el hiperparÃ¡metro K
 # Usaremos el mejor conjunto de atributos (ej: Top 50) para buscar el mejor K
 
 mejor_subconjunto = top_pixeles[:50]
@@ -539,6 +539,15 @@ X_dev_train, X_dev_test, y_dev_train, y_dev_test = train_test_split(
     stratify=y_dev
 )
 
+#Verificacion de tamaños para el informe
+total = len(df)
+print(f" Tamaños de los conjuntos (Total: {total})")
+print('---')
+print(f"Desarrollo (Dev): {len(X_dev)} muestras ({len(X_dev)/total*100:.1f}%)")
+print(f"Evaluación Final (Held-out): {len(X_held_out)} muestras ({len(X_held_out)/total*100:.1f}%)")
+print(f"  └─ Dev-Train: {len(X_dev_train)} muestras ({len(X_dev_train)/total*100:.1f}%)")
+print(f"  └─ Dev-Test (Val): {len(X_dev_test)} muestras ({len(X_dev_test)/total*100:.1f}%)")
+
 #%%
 
 #Punto 3b)
@@ -548,13 +557,13 @@ tree_test_precision = []
 
 depth_range = range(1, 21)
 
-for i in range(1,21):
+for i in depth_range:
     tree = DecisionTreeClassifier(max_depth=i, random_state=0)
     tree.fit(X_dev_train, y_dev_train)
     tree_train_precision.append(tree.score(X_dev_train, y_dev_train))
     tree_test_precision.append(tree.score(X_dev_test, y_dev_test))
 
-#%%
+
 plt.figure(figsize=(16, 8))
 plt.plot(depth_range, tree_train_precision, label='Train Data',
          marker='o', linestyle='--', linewidth=3, markersize=10)
@@ -578,3 +587,58 @@ print(tree_test_precision[13])
 print(tree_test_precision[18])
 
 # Probablemente la mejor profundidad se encuentre entre 8 y el 12. Ya despues del 12 empieza a aparecer overfitting
+
+
+#%% Punto 3.c) 
+
+from sklearn.model_selection import cross_val_score
+
+# Experimento de Selección con K-Folding
+
+# Definimos el rango LIMITADO que pide la consigna (1 a 10)
+depth_range_consigna = range(1, 11)
+promedios_cv = []
+
+print("Iniciando validación cruzada (K-Folding)...")
+
+for d in depth_range_consigna:
+    model = DecisionTreeClassifier(max_depth=d, random_state=0)
+    
+    # Usamos cross_val_score sobre TODO el conjunto X_dev
+    # cv=5 significa 5-folding (Clase 16)
+    scores = cross_val_score(model, X_dev, y_dev, cv=5)
+    promedios_cv.append(scores.mean())
+    print(f"Profundidad {d}: Exactitud promedio CV = {scores.mean():.4f}")
+
+# Seleccionamos el mejor modelo según la consigna
+mejor_prof_cv = depth_range_consigna[np.argmax(promedios_cv)]
+mejor_score_cv = max(promedios_cv)
+
+print("\n--- RESULTADOS DE SELECCIÓN ---")
+print(f"La mejor configuración es max_depth = {mejor_prof_cv}")
+print(f"Performance (Exactitud promedio CV): {mejor_score_cv * 100:.2f}%")
+
+
+# Gráfico de validación cruzada 
+plt.figure(figsize=(10, 6))
+plt.plot(depth_range_consigna, promedios_cv, marker='o', linestyle='-', color='forestgreen', linewidth=2)
+plt.title("Selección de Hiperparámetros: Exactitud vs. Profundidad (K-Fold CV)")
+plt.xlabel("Profundidad Máxima (max_depth)")
+plt.ylabel("Exactitud Promedio (Mean CV Accuracy)")
+plt.xticks(depth_range_consigna)
+plt.grid(True, alpha=0.3)
+# Resaltamos el punto óptimo
+plt.axvline(mejor_prof_cv, color='red', linestyle='--', label=f'Mejor: Depth {mejor_prof_cv}')
+plt.legend()
+plt.show()
+
+
+#%% Punto 3.d)
+# Evaluación final del modelo SELECCIONADO (Depth 10)
+
+modelo_seleccionado = DecisionTreeClassifier(max_depth=10, random_state=0)
+modelo_seleccionado.fit(X_dev, y_dev) # Re-entrenamos con todo Dev
+
+exactitud_final_legal = modelo_seleccionado.score(X_held_out, y_held_out)
+
+print(f"Exactitud final en Held-out (Modelo Depth 10): {exactitud_final_legal * 100:.2f}%")
