@@ -282,9 +282,8 @@ plt.show()
 
 # DF con O y L
 
-df_l = df[df['label'] == 11]
-df_o = df[df['label'] == 14]
-df_ol = pd.concat([df_l, df_o])
+clases_interes = [11, 14] # L y O
+df_ol = df[df['label'].isin(clases_interes)].copy()
 
 # Solo para verificar que le atine a los indices del label
 print(df_ol)
@@ -294,7 +293,7 @@ print(df_ol.dtypes)
 
 # Cantidad de valores nulos
 print(df_ol.isnull().sum())
-print(df_ol.head())
+
 print(df_ol['label'].value_counts().sort_index())
 
 # El output en consola dice que cada uno de los labels tiene 1016 valores, ninguno de ellos es nulo, todos son tipo int64
@@ -321,6 +320,9 @@ duplicados = df_ol.duplicated().sum()
 print(f"Cantidad de filas duplicadas: {duplicados}")
 
 # %% 2.b)
+#En el informe: No se realizó escalado de atributos 
+#dado que todos los píxeles comparten la misma unidad y rango dinámico ([0,255])
+
 
 # Separo en datos de train y test
 
@@ -343,19 +345,21 @@ top_pixeles = varianza_ol.index.tolist()
 # solo para ver. podemos usar estos e ir de 3 en 3 para probar distintas variables y ver si cambia mucho o no tanto
 print("10 pixeles más variables:")
 print(top_pixeles[:10])
+#En el informe: No se realizó escalado de atributos 
+#dado que todos los píxeles comparten la misma unidad y rango dinámico ([0,255])
 
 sub1 = top_pixeles[:3]
 
-# Los 3 pÃ­xeles con MENOS varianza
+# Los 3 píxeles con MENOS varianza
 sub2 = top_pixeles[-3:]
 
-# 3 pixeles al azar (puedes elegir cualquier otro si quieres para probar tobias)
+# 3 pixeles al azar 
 sub3 = top_pixeles[100:103]
 
 subconjuntos = {
-    'subconjunto1': sub1,
-    'subconjunto2': sub2,
-    'subconjunto3': sub3,
+    'Top 3 Varianza': sub1,
+    'Bottom 3 Varianza': sub2,
+    '3 Varianza Media': sub3,
 }
 
 
@@ -405,6 +409,19 @@ ax.set_ylim(0, 1.1)
 ax.legend()
 plt.tight_layout()
 plt.show()
+
+#En el informe: No se realizó escalado de atributos 
+#dado que todos los píxeles comparten la misma unidad y rango dinámico ([0,255])
+
+# ¿cuáles son los píxeles físicamente? 
+# Imprimimos sus coordenadas (fila, columna)
+for nombre, atributos in subconjuntos.items():
+    print(f"\n{nombre}:")
+    for attr in atributos:
+        pixel_idx = int(attr.replace('pixel', ''))
+        fila = pixel_idx // 28
+        col = pixel_idx % 28
+        print(f"  - {attr}: [Fila {fila}, Col {col}]")
 
 # %% 2.c)
 
