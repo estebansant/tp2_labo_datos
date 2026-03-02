@@ -13,6 +13,7 @@ import math
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score
+from sklearn.tree import DecisionTreeClassifier
 
 directorio_script = os.path.dirname(os.path.abspath(__file__))
 
@@ -501,7 +502,7 @@ for k in k_range:
     acc_test_k.append(accuracy_score(
         y_test, knn_k.predict(X_test[mejor_subconjunto])))
 
-# --- Gráfico de Curva de Complejidad para 2.d ---
+# Grafico de precision en funcion del K
 plt.figure(figsize=(14, 8))
 plt.plot(k_range, acc_train_k, label='Train Data',
          marker='o', linestyle='--', linewidth=3, markersize=10)
@@ -518,3 +519,64 @@ plt.show()
 mejor_k = k_range[np.argmax(acc_test_k)]
 print(
     f"El mejor valor de K encontrado es: {mejor_k} con una exactitud de {max(acc_test_k):.4f}")
+
+#%%
+
+# Punto 3
+
+#3a)
+
+
+pixeles = df.drop('label', axis=1)
+letra = df['label']
+# Separo en held_out y dev
+X_dev, X_held_out, y_dev, y_held_out = train_test_split(
+    pixeles, letra, test_size=0.25, random_state=66, shuffle=True, stratify=letra)
+
+# Separo la data de dev en 80% train y 20% test
+X_dev_train, X_dev_test, y_dev_train, y_dev_test = train_test_split(
+    X_dev, y_dev, 
+    test_size=0.20, 
+    random_state=66, 
+    stratify=y_dev
+)
+
+#%%
+
+#Punto 3b)
+
+tree_train_precision = []
+tree_test_precision = []
+
+depth_range = range(1, 21)
+
+for i in range(1,21):
+    tree = DecisionTreeClassifier(max_depth=i, random_state=0)
+    tree.fit(X_dev_train, y_dev_train)
+    tree_train_precision.append(tree.score(X_dev_train, y_dev_train))
+    tree_test_precision.append(tree.score(X_dev_test, y_dev_test))
+
+#%%
+plt.figure(figsize=(16, 8))
+plt.plot(depth_range, tree_train_precision, label='Train Data',
+         marker='o', linestyle='--', linewidth=3, markersize=10)
+plt.plot(depth_range, tree_test_precision, label='Test Data', marker='s', linewidth=3, markersize=10)
+plt.xlabel('Profundidad del Árbol', fontsize=18)
+plt.ylabel('Exactitud', fontsize=18)
+plt.xticks(depth_range, fontsize=16)
+plt.yticks(fontsize=16)
+plt.legend(fontsize=16)
+plt.grid(True, linestyle='--', alpha=0.6)
+plt.show()
+
+# Identificar la mejor profundidad
+mejor_profundidad = depth_range[np.argmax(tree_test_precision)]
+max_exactitud = max(tree_test_precision)
+
+print(f"La mejor profundidad encontrada es: {mejor_profundidad} con una exactitud de {max_exactitud:.4f}")
+# Profundidad 14
+print(tree_test_precision[13])
+# Profundidad 19
+print(tree_test_precision[18])
+
+# Probablemente la mejor profundidad se encuentre entre 8 y el 12. Ya despues del 12 empieza a aparecer overfitting
