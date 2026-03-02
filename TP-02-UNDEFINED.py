@@ -17,7 +17,7 @@ from sklearn.tree import DecisionTreeClassifier
 
 directorio_script = os.path.dirname(os.path.abspath(__file__))
 
-data_ruta = os.path.join(directorio_script, "TP02-EnglishTypeAlphabet.csv")
+data_ruta = os.path.join(directorio_script, "letras.csv.gz")
 
 df = pd.read_csv(data_ruta, low_memory=False)
 
@@ -79,19 +79,6 @@ for ax in axes:
 plt.tight_layout()
 plt.show()
 
-# %%
-
-# Analisis estadistico por pixel
-
-pixel_variance = df.iloc[:, 1:].var()
-
-variance_image = pixel_variance.values.reshape(28, 28)
-plt.imshow(variance_image, cmap='hot')
-plt.colorbar()
-plt.title('Varianza por pixel')
-plt.xlabel('Píxeles en eje X')
-plt.ylabel('Píxeles en eje Y')
-plt.show()
 
 
 # %%
@@ -104,7 +91,7 @@ print(f"Letras únicas: {df['label'].nunique()}")
 
 # Separar lo que nos interesa del resto
 y = df.iloc[:, 0]
-X = df.iloc[:, 1:]
+# Analisis estadistico por pixel
 
 # Separar los pixeles (X) de la letra (y)
 X = df.iloc[:, 1:]
@@ -280,7 +267,7 @@ plt.legend()
 plt.tight_layout()
 plt.show()
 
-# %%
+# %% 2.a)
 
 # DF con O y L
 
@@ -322,7 +309,7 @@ print('es de 0 a 255')
 duplicados = df_ol.duplicated().sum()
 print(f"Cantidad de filas duplicadas: {duplicados}")
 
-# %%
+# %% 2.b)
 
 # Separo en datos de train y test
 
@@ -408,7 +395,7 @@ ax.legend()
 plt.tight_layout()
 plt.show()
 
-# %%
+# %% 2.c)
 
 # Ahora quiero ver como cambia la precision para distintas cantidades de atributos seleccionados de varias partes de los pixeles (mayor y menor varianza)
 subconjuntos_mejor_varianza = {
@@ -498,15 +485,15 @@ for k in k_range:
     knn_k.fit(X_train[mejor_subconjunto], y_train)
 
     acc_train_k.append(accuracy_score(
-        y_train, knn_k.predict(X_train[mejor_subconjunto])))
+        y_train, knn_k.predict(X_train[mejor_subconjunto])) *100)
     acc_test_k.append(accuracy_score(
-        y_test, knn_k.predict(X_test[mejor_subconjunto])))
+        y_test, knn_k.predict(X_test[mejor_subconjunto]))*100)
 
 # Grafico de precision en funcion del K
 plt.figure(figsize=(14, 8))
-plt.plot(k_range, acc_train_k, label='Train Data',
+plt.plot(k_range, acc_train_k, label='Train Data (%)',
          marker='o', linestyle='--', linewidth=3, markersize=10)
-plt.plot(k_range, acc_test_k, label='Test Data', marker='s', linewidth=3, markersize=10)
+plt.plot(k_range, acc_test_k, label='Test Data (%)', marker='s', linewidth=3, markersize=10)
 plt.xlabel('Valor de K', fontsize=18)
 plt.ylabel('Exactitud', fontsize=18)
 plt.xticks(k_range, fontsize=16)
