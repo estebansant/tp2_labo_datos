@@ -1,5 +1,6 @@
+# -*- coding: utf-8 -*-
 """
-Integrantes: TobÃ­as Passarelli, Santiago Pizzani Esteban
+Integrantes: Tobías Passarelli, Santiago Pizzani Esteban
 
 
 """
@@ -27,9 +28,13 @@ df = pd.read_csv(data_ruta, low_memory=False)
 print(df.shape)
 print(df.dtypes)
 
-# Cantidad de valores nulos
+# Cantidad de valores nulos (SACARIA ESTO)
 print(df.isnull().sum())
+
+
 print(df.head())
+
+#CANTIDAD DE VALORES POR LABEL
 print(df['label'].value_counts().sort_index())
 
 # El output en consola dice que cada uno de los labels tiene 1016 valores, ninguno de ellos es nulo, todos son tipo int64
@@ -37,18 +42,18 @@ print(df['label'].value_counts().sort_index())
 
 cuentas = df['label'].value_counts().sort_index()
 
-# Imprimir el mÃ­nimo y mÃ¡ximo para el informe
-print(f"Clase con mÃ¡s datos: {cuentas.max()}")
+# Imprimir el mí­nimo y máximo para el informe
+print(f"Clase con más datos: {cuentas.max()}")
 print(f"Clase con menos datos: {cuentas.min()}")
 
-# Verificar nulos
+# Verificar nulos (PODRIA IR CON LA VARIABLE DUPLICADOS)
 nulos_totales = df.isnull().sum().sum()
 print(f"Cantidad de valores nulos: {nulos_totales}")
 
 # Rango de los pixeles
 valor_min = df.iloc[:, 1:].values.min()
 valor_max = df.iloc[:, 1:].values.max()
-print(f"Rango de valores de pÃ­xeles: [{valor_min}, {valor_max}]")
+print(f"Rango de valores de píxeles: [{valor_min}, {valor_max}]")
 print('es de 0 a 255')
 
 # Chequeo de filas duplicadas
@@ -57,7 +62,7 @@ print(f"Cantidad de filas duplicadas: {duplicados}")
 
 # %%
 
-# Mapeo de label numÃ©rico a letra
+# Mapeo de label numérico a letra
 label_a_letra = {}
 
 for i in range(26):
@@ -82,12 +87,11 @@ plt.show()
 
 
 # %%
-# CODIGO DE TOBIAS
 
 # 1.a)
 # Cantidad de datos y clases
 print(f"Instancias: {df.shape[0]}, Atributos: {df.shape[1]}")
-print(f"Letras Ãºnicas: {df['label'].nunique()}")
+print(f"Letras Únicas: {df['label'].nunique()}")
 
 # Separar lo que nos interesa del resto
 y = df.iloc[:, 0]
@@ -106,12 +110,10 @@ mapa_varianza = np.array(varianzas).reshape((28, 28))
 plt.figure(figsize=(8, 6))
 plt.imshow(mapa_varianza, cmap='hot')
 plt.colorbar(label='Varianza')
-plt.title("Relevancia de Atributos (PÃ­xeles) segÃºn su Varianza")
 plt.show()
 
 
-# Varianzas de los 784 pÃ­xeles
-varianzas = X.var()
+
 
 # Umbral del 10%
 umbral = varianzas.quantile(0.10)
@@ -127,13 +129,16 @@ print(f"Atributos descartados: {len(X.columns) - len(X_reducido.columns)}")
 # %% 1.b)
 # Revisado y con nuevos pares de letras
 
+#MAPEO DE NUMERO A LETRA 
 mapping = {
     12: 'M', 14: 'O', 16: 'Q', 18: 'S',
     15: 'P',  1: 'B',  3: 'D',  0: 'A',
     13: 'N', 10: 'K',  5: 'F'
 }
-
-
+"""
+Encapsulamos el filtrado por etiqueta, el cálculo de la "letra promedio" mediante .mean(), 
+la generación de la imagen diferencia (np.abs) y el cálculo de la distancia euclidea.
+"""
 def analizar_similitud(id1, id2, mapping):
     img1 = df[df['label'] == id1].iloc[:, 1:].mean().values.reshape(28, 28)
     img2 = df[df['label'] == id2].iloc[:, 1:].mean().values.reshape(28, 28)
@@ -175,19 +180,20 @@ dist_kf = analizar_similitud(10,  5, mapping)
 pares = ['O vs Q', 'S vs M', 'P vs B', 'D vs O', 'A vs N', 'K vs F']
 distancias = [dist_oq, dist_sm, dist_pb, dist_do, dist_an, dist_kf]
 
-
+# Función para ordenar los pares por su distancia
 def ordenar(item):
     return item[1]
 
-
+# Ordena los pares de menor a mayor distancia
 resumen = sorted(zip(pares, distancias), key=ordenar)
+
 
 pares_ordenados = [x[0] for x in resumen]
 distancias_ordenadas = [x[1] for x in resumen]
 
 plt.figure(figsize=(10, 5))
 bars = plt.bar(pares_ordenados, distancias_ordenadas)
-plt.ylabel("Distancia EuclÃ­dea")
+plt.ylabel("Distancia Euclí­dea")
 
 # Agregar el valor encima de cada barra
 for bar, val in zip(bars, distancias_ordenadas):
@@ -201,7 +207,7 @@ print("\nRanking de similitud por distancia euclidea:")
 for par, dist in resumen:
     print(f"  {par}: {dist:.2f}")
 
-# %%1.c)
+#%% 1.c)
 
 df_j = df[df['label'] == 9]
 
@@ -223,36 +229,41 @@ subset = df[df['label'] == 9].iloc[:, 1:]
 std_image = subset.std().values.reshape(28, 28)
 plt.imshow(std_image, cmap='hot')
 plt.colorbar()
-plt.xlabel('PÃ­xeles en eje X')
-plt.ylabel('PÃ­xeles en eje Y')
+plt.xlabel('Pí­xeles en eje X')
+plt.ylabel('Pí­xeles en eje Y')
 plt.show()
 
-# %%
+# Métricas para el informe (Cuantificación de la variabilidad)
+std_por_pixel = df_j.iloc[:, 1:].std()
+print(f"Desvío estándar promedio por píxel: {std_por_pixel.mean():.2f}")
+
+# Cálculo de distancias a la J promedio
+j_promedio = df_j.iloc[:, 1:].mean().values
+distancias = np.linalg.norm(df_j.iloc[:, 1:].values - j_promedio, axis=1)
+
+print(f"Distancia promedio a la J promedio: {distancias.mean():.2f}")
+
 
 # Metricas para cuantificar al J
 std_por_pixel = df_j.std()
 
 print("Variabilidad de J")
-print(f"Total de imÃ¡genes: {len(df_j)}")
-print(f"Std promedio por pÃ­xel: {std_por_pixel.mean():.2f}")
-print(f"Std mÃ¡xima (pÃ­xel mÃ¡s variable): {std_por_pixel.max():.2f}")
-print(f"Std mÃ­nima (pÃ­xel mÃ¡s estable): {std_por_pixel.min():.2f}")
+print(f"Total de imágenes: {len(df_j)}")
+
+print(f"Std máxima (pí­xel más variable): {std_por_pixel.max():.2f}")
+
+#NO TENEMOS EN CUENTA A LA COLUMNA LABEL NI A LAS QUE NUNCA VARIAN
+print(f"Std mí­nima (píxel más estable): {std_por_pixel[std_por_pixel > 0].min():.2f}")
 
 # Agarro el promedio
 j_promedio = df_j.mean().values
 
-distancias = []
-for i in range(len(df_j)):
-    fila = df_j.iloc[i].values
-    distancia = np.linalg.norm(fila - j_promedio)
-    distancias.append(distancia)
-
-distancias = np.array(distancias)
 
 
-print(f"\nDistancia promedio a la J promedio: {distancias.mean():.2f}")
-print(f"Distancia mÃ¡xima a la J promedio:   {distancias.max():.2f}")
-print(f"Distancia mÃ­nima a la J promedio:   {distancias.min():.2f}")
+
+
+print(f"Distancia máxima a la J promedio:   {distancias.max():.2f}")
+print(f"Distancia mí­nima a la J promedio:   {distancias.min():.2f}")
 
 cantidad_bins = math.ceil(np.sqrt(len(distancias)))
 
@@ -261,8 +272,8 @@ plt.figure(figsize=(8, 4))
 plt.hist(distancias, bins=cantidad_bins, color='steelblue', edgecolor='white')
 plt.axvline(distancias.mean(), color='red', linestyle='--',
             label=f'Media: {distancias.mean():.1f}')
-plt.xlabel("Distancia EuclÃ­dea a la J promedio")
-plt.ylabel("Cantidad de imÃ¡genes")
+plt.xlabel("Distancia Euclí­dea a la J promedio")
+plt.ylabel("Cantidad de imágenes")
 plt.legend()
 plt.tight_layout()
 plt.show()
