@@ -742,6 +742,20 @@ print(f"Criterio Óptimo: {mejor_config['Criterio']}")
 print(f"Profundidad Óptima: {mejor_config['Profundidad']}")
 print(f"Performance (Exactitud CV): {mejor_config['Exactitud_Media_CV'] * 100:.2f}%")
 
+#%% 
+import seaborn as sns
+plt.figure(figsize=(10, 6))
+# Graficamos las dos curvas usando el DataFrame que me pasaste
+sns.lineplot(data=df_resultados, x='Profundidad', y='Exactitud_Media_CV', hue='Criterio', marker='o')
+
+plt.title('Desempeño del Árbol de Decisión: Entropía vs Gini (5-Fold CV)')
+plt.xlabel('Profundidad Máxima del Árbol')
+plt.ylabel('Exactitud Media (Cross-Validation)')
+plt.xticks(range(1, 11))
+plt.grid(True, linestyle='--', alpha=0.7)
+plt.legend(title='Criterio de Impureza')
+plt.tight_layout()
+plt.show()
 # %% Punto 3.d)
 # Evaluación final del modelo SELECCIONADO (Depth 10)
 """
