@@ -704,6 +704,43 @@ plt.axvline(mejor_prof_cv, color='red', linestyle='--',
 plt.legend()
 plt.show()
 
+#%% ALTERNATIVA 3.C)
+# Selección de Hiperparámetros (Grid Search con K-Folding)
+
+
+# Definimos los espacios de búsqueda según la consigna y la teoría
+criterios = ['gini', 'entropy']
+profundidades = range(1, 11)
+
+resultados = []
+
+print("Iniciando búsqueda en grilla de hiperparámetros (5-Fold CV)...")
+
+# Exploramos todas las combinaciones posibles
+for crit in criterios:
+    for prof in profundidades:
+        model = DecisionTreeClassifier(criterion=crit, max_depth=prof, random_state=0)
+        
+        # Validación cruzada sobre el conjunto de desarrollo
+        scores = cross_val_score(model, X_dev, y_dev, cv=5)
+        
+        # Guardamos los resultados
+        resultados.append({
+            'Criterio': crit,
+            'Profundidad': prof,
+            'Exactitud_Media_CV': scores.mean()
+        })
+
+# Convertimos a DataFrame para analizar los resultados fácilmente
+df_resultados = pd.DataFrame(resultados)
+
+# Encontramos la configuración con la mejor exactitud
+mejor_config = df_resultados.loc[df_resultados['Exactitud_Media_CV'].idxmax()]
+
+print("\n--- MEJOR CONFIGURACIÓN ENCONTRADA ---")
+print(f"Criterio Óptimo: {mejor_config['Criterio']}")
+print(f"Profundidad Óptima: {mejor_config['Profundidad']}")
+print(f"Performance (Exactitud CV): {mejor_config['Exactitud_Media_CV'] * 100:.2f}%")
 
 # %% Punto 3.d)
 # Evaluación final del modelo SELECCIONADO (Depth 10)
@@ -721,7 +758,7 @@ print(
 # Punto 3.d) Evaluación Final: Exactitud y Matriz de Confusión
 
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
-
+"""
 # Punto 3.d) Evaluación Final sobre Held-out
 
 # 1. Entrenamiento final con el hiperparámetro seleccionado (depth=10)
@@ -739,7 +776,24 @@ cm = confusion_matrix(y_held_out, y_pred)
 print("--- RESULTADO DEFINITIVO ---")
 print(f"Exactitud final en datos no vistos (Held-out): {exactitud_final * 100:.2f}%")
 
-# (Aquí va el código del plot de la matriz que ya tenés)
+"""
+#  Punto 3.d) Evaluación Final sobre Held-out
+
+# 1. Entrenamiento final con el MEJOR hiperparámetro (entropy, depth=10)
+modelo_final = DecisionTreeClassifier(criterion='entropy', max_depth=10, random_state=0)
+modelo_final.fit(X_dev, y_dev)
+
+# 2. Evaluación ÚNICA sobre el conjunto Held-out
+exactitud_final = modelo_final.score(X_held_out, y_held_out)
+
+# 3. Matriz de Confusión para análisis de errores
+y_pred = modelo_final.predict(X_held_out)
+cm = confusion_matrix(y_held_out, y_pred)
+
+print("--- RESULTADO DEFINITIVO ---")
+print(f"Exactitud final en datos no vistos (Held-out): {exactitud_final * 100:.2f}%")
+
+# (Dejá abajo tu código del plt.subplots para graficar la matriz de confusión)
 
 # Configuración visual para el informe
 fig, ax = plt.subplots(figsize=(14, 11))
