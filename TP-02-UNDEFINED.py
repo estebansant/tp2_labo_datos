@@ -547,7 +547,7 @@ plt.legend(fontsize=16)
 plt.grid(True, linestyle='--', alpha=0.6)
 plt.show()
 
-# %% EJERCICIO 2.d: Variando el hiperparÃ¡metro K
+# %% EJERCICIO 2.d: Variando el hiperparametro K
 # Usaremos el mejor conjunto de atributos (ej: Top 50) para buscar el mejor K
 
 mejor_subconjunto = top_pixeles[:50]
@@ -707,7 +707,7 @@ plt.show()
 
 # %% Punto 3.d)
 # Evaluación final del modelo SELECCIONADO (Depth 10)
-
+"""
 modelo_seleccionado = DecisionTreeClassifier(max_depth=10, random_state=0)
 modelo_seleccionado.fit(X_dev, y_dev)  # Re-entrenamos con todo Dev
 
@@ -715,5 +715,43 @@ exactitud_final_legal = modelo_seleccionado.score(X_held_out, y_held_out)
 
 print(
     f"Exactitud final en Held-out (Modelo Depth 10): {exactitud_final_legal * 100:.2f}%")
+"""
+# hay que meterle metricas de test a esto. Exactitud y Matriz de Confusion
 
-# hay que meterle metricas de test a esto. Exactitud, Precision, y  F1 score
+# Punto 3.d) Evaluación Final: Exactitud y Matriz de Confusión
+
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+
+# Punto 3.d) Evaluación Final sobre Held-out
+
+# 1. Entrenamiento final con el hiperparámetro seleccionado (depth=10)
+# Se utiliza el conjunto de Desarrollo completo (X_dev, y_dev) [cite: 311, 350]
+modelo_final = DecisionTreeClassifier(max_depth=10, random_state=0)
+modelo_final.fit(X_dev, y_dev)
+
+# 2. Evaluación ÚNICA sobre el conjunto Held-out [cite: 325]
+exactitud_final = modelo_final.score(X_held_out, y_held_out)
+
+# 3. Matriz de Confusión para análisis de errores [cite: 677, 1037]
+y_pred = modelo_final.predict(X_held_out)
+cm = confusion_matrix(y_held_out, y_pred)
+
+print("--- RESULTADO DEFINITIVO ---")
+print(f"Exactitud final en datos no vistos (Held-out): {exactitud_final * 100:.2f}%")
+
+# (Aquí va el código del plot de la matriz que ya tenés)
+
+# Configuración visual para el informe
+fig, ax = plt.subplots(figsize=(14, 11))
+letras = [chr(i) for i in range(ord('A'), ord('Z') + 1)] # Genera etiquetas A-Z
+disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=letras)
+
+# Graficamos con mapa de colores Blues para facilitar la lectura de la diagonal [cite: 1054]
+disp.plot(cmap='Blues', ax=ax, values_format='d', colorbar=True)
+
+plt.title(f"Matriz de Confusión Final - Exactitud: {exactitud_final*100:.2f}%", fontsize=14)
+plt.xlabel("Etiqueta Predicha por el Modelo", fontsize=12)
+plt.ylabel("Etiqueta Real (Datos Held-out)", fontsize=12)
+plt.tight_layout()
+plt.show()
+
