@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
 """
+Grupo: UNDEFINED
 Integrantes: Tobías Passarelli, Santiago Pizzani Esteban
 
-
+En este codigo analizamos el dataset con los caracteres del alfabeto ingles y le aplicamos un modelo de clasificaion binaria y otro de clasificacion multiple para diferenciar y clasificar las letras de las imagenes del dataset.
+Lo primero que hacemos es explorar el dataset, ver la cantidad de datos que tiene, el tipo de datos, como estna organizados... Luego se ve la varianza para todas las letras y se grafica en un heattmap, se eligen apres de letras y se grafica la distancia euclidea entre ellas (el promedio de esa letra ideal), y por ultimo se usa el caso de la letra J como ejemplo para mostrar y analizar la diferencia que existe entre las distintas representaciones de una misma letra dentro del dataset.
+Luego se busca aplicar un modelo de clasificacion binaria para las letras O y L. Para ello, primero se saca el promedio ideal de cada una de estas letras, se obtiene la varianza pixel a pixel y se ordena desde mayor varianza a menor varianza. Esto se usa para graficar la exactitud del modelo KNN en funcion de la cantidad de pixeles usados (y su orden en varianza). Se elige 50 como valor ideal y se pasa a graficar como cambia la exactitud para el KNN variando el K para el modelo con los primeros 50 pixeles de mayor varianza.
+Finalmente se entreno un modelo de calsificacion multiclase usando un arbol de decision partiendo en 75% datos de desarrollo y 25% datos en heldout. Se vio primero un rango ideal de profundidades para evitar sobreajuste y subajuste, luego se probaron y compararon la exactitud de Gini contra la Entropia para ese rango de profundidades elegidas, de eso se obtuvo que 9 es la profundidad ideal. Por ultimo, para la profundidad 9 se probo el modelo usando el heldout con todos los datos de desarrollo como entrenamiento, se obtuvo la exactitud y se construyo la matriz de confusion.
 """
 # %%
 
@@ -12,11 +16,10 @@ import os
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import math
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, confusion_matrix, ConfusionMatrixDisplay
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.model_selection import cross_val_score
 
 directorio_script = os.path.dirname(os.path.abspath(__file__))
 
@@ -64,31 +67,6 @@ print(f"Cantidad de filas duplicadas: {duplicados}")
 
 # %%
 
-# Mapeo de label numérico a letra
-label_a_letra = {}
-
-for i in range(26):
-    # NOTA: Como las letras mayusculas empiezan a partir del 65 en ASCII, empiezo a contar desde ese numero
-    label_a_letra[i] = chr(65 + i)
-
-fig, axes = plt.subplots(4, 7, figsize=(14, 8))
-axes = axes.flatten()
-
-for i in range(26):
-    sample = df[df['label'] == i].iloc[0, 1:].values.reshape(28, 28)
-    axes[i].imshow(sample, cmap='gray')
-    axes[i].set_title(label_a_letra[i])
-    axes[i].axis('off')
-
-for ax in axes:
-    ax.axis('off')
-
-plt.tight_layout()
-plt.show()
-
-
-# %%
-
 # 1.a)
 # Cantidad de datos y clases
 print(f"Instancias: {df.shape[0]}, Atributos: {df.shape[1]}")
@@ -118,6 +96,8 @@ plt.yticks(fontsize=16)
 cbar = plt.colorbar(img)
 cbar.set_label('Varianza', fontsize=18)
 cbar.ax.tick_params(labelsize=16)
+
+plt.savefig('graficos/heatmap_todas_las_letras.png',  dpi=300, bbox_inches='tight', transparent=False)
 plt.show()
 
 
@@ -141,10 +121,8 @@ mapping = {
     15: 'P',  1: 'B',  3: 'D',  0: 'A',
     13: 'N', 10: 'K',  5: 'F'
 }
-"""
-Encapsulamos el filtrado por etiqueta, el cálculo de la "letra promedio" mediante .mean(), 
-la generación de la imagen diferencia (np.abs) y el cálculo de la distancia euclidea.
-"""
+
+# Metemos el filtrado por etiqueta, el cálculo de la "letra promedio" con .mean(),  la generación de la imagen diferencia (np.abs) y el cálculo de la distancia euclidea en una misma funcion
 
 
 def analizar_similitud(id1, id2, mapping):
@@ -167,6 +145,8 @@ def analizar_similitud(id1, id2, mapping):
         a.tick_params(axis='both', labelsize=16)
 
     plt.tight_layout()
+    
+    plt.savefig(f"graficos/paresLetras/par_{mapping[id1]}_{mapping[id2]}.png",  dpi=300, bbox_inches='tight', transparent=False)
     plt.show()
 
     return np.linalg.norm(img1 - img2)
@@ -220,6 +200,7 @@ plt.yticks(fontsize=16)
 
 plt.ylim(0, max(distancias_ordenadas) * 1.15)
 
+# Valores en el centro y arriba de las barras
 for bar, val in zip(bars, distancias_ordenadas):
     plt.text(bar.get_x() + bar.get_width()/2, 
              bar.get_height() + (max(distancias_ordenadas) * 0.01),
@@ -229,6 +210,8 @@ for bar, val in zip(bars, distancias_ordenadas):
              fontsize=16)
 
 plt.tight_layout()
+
+plt.savefig('graficos/distancia_euclidiana_letras.png',  dpi=300, bbox_inches='tight', transparent=False)
 plt.show()
 
 print("\nRanking de similitud por distancia euclidea:")
@@ -249,10 +232,6 @@ std_image = df[df['label'] == 9].iloc[:, 1:].std().values.reshape(28, 28)
 j_promedio = df_j.iloc[:, 1:].mean().values
 distancias = np.linalg.norm(df_j.iloc[:, 1:].values - j_promedio, axis=1)
 cantidad_bins = math.ceil(np.sqrt(len(distancias)))
-
-LABEL_FONTSIZE  = 16
-TICK_FONTSIZE   = 16
-LETTER_FONTSIZE = 18
 
 fig = plt.figure(figsize=(16, 11))
 
@@ -320,7 +299,7 @@ ax_hist.text(
     fontsize=18, fontweight='bold', va='top'
 )
 
-plt.savefig('subplots_j.png', dpi=300, bbox_inches='tight')
+plt.savefig('graficos/subplots_para_j.png',  dpi=300, bbox_inches='tight', transparent=False)
 plt.show()
 # %% 2.a)
 
@@ -348,7 +327,7 @@ cuentas = df_ol['label'].value_counts().sort_index()
 # Imprimir el mi­nimo y maximo para el informe
 print(f"Clase con más datos: {cuentas.max()}")
 print(f"Clase con menos datos: {cuentas.min()}")
-
+ 
 # Verificar nulos
 nulos_totales = df_ol.isnull().sum().sum()
 print(f"Cantidad de valores nulos: {nulos_totales}")
@@ -386,86 +365,6 @@ varianza_ol = X_train.var().sort_values(ascending=False)
 # Los indices de los pixeles que mas varian
 top_pixeles = varianza_ol.index.tolist()
 
-# solo para ver. podemos usar estos e ir de 3 en 3 para probar distintas variables y ver si cambia mucho o no tanto
-print("10 pixeles más variables:")
-print(top_pixeles[:10])
-# En el informe: No se realizó escalado de atributos
-# dado que todos los píxeles comparten la misma unidad y rango dinámico ([0,255])
-
-sub1 = top_pixeles[:3]
-
-# Los 3 píxeles con MENOS varianza
-sub2 = top_pixeles[-3:]
-
-# 3 pixeles al azar
-sub3 = top_pixeles[100:103]
-
-subconjuntos = {
-    'Top 3 Varianza': sub1,
-    'Bottom 3 Varianza': sub2,
-    '3 Varianza Media': sub3,
-}
-
-
-knn = KNeighborsClassifier(n_neighbors=3)
-
-precision_train = []
-precision_test = []
-
-
-for nombre, atributos in subconjuntos.items():
-    # Construir modelo. De esta forma solo tengo los 3 pixeles seleccionados para armar mi modelo (cada modelo tiene 3 pixeles)
-    knn.fit(X_train[atributos], y_train)
-
-    # Precision en train data
-    predicciones_train = knn.predict(X_train[atributos])
-    precision_train.append(accuracy_score(y_train, predicciones_train))
-
-    # Probar modelo con test data
-    predicciones_test = knn.predict(X_test[atributos])
-    precision_test.append(accuracy_score(y_test, predicciones_test))
-
-
-# Plot para el grafico con data de precision.
-nombres = list(subconjuntos.keys())
-x = np.arange(len(nombres))
-ancho = 0.35
-
-fig, ax = plt.subplots(figsize=(10, 5))
-barras_train = ax.bar(x - ancho/2, precision_train, ancho,
-                      label='Train')
-barras_test = ax.bar(x + ancho/2, precision_test,  ancho,
-                     label='Test')
-
-# Valor encima de cada barra
-for barra in barras_train:
-    ax.text(barra.get_x() + barra.get_width()/2, barra.get_height() + 0.005,
-            f'{barra.get_height():.3f}', ha='center', va='bottom', fontsize=9)
-
-for barra in barras_test:
-    ax.text(barra.get_x() + barra.get_width()/2, barra.get_height() + 0.005,
-            f'{barra.get_height():.3f}', ha='center', va='bottom', fontsize=9)
-
-ax.set_ylabel('Exactitud [%]')
-ax.set_xticks(x)
-ax.set_xticklabels(nombres, ha='right')
-ax.set_ylim(0, 1.1)
-ax.legend()
-plt.tight_layout()
-plt.show()
-
-# En el informe: No se realizó escalado de atributos
-# dado que todos los píxeles comparten la misma unidad y rango dinámico ([0,255])
-
-# ¿cuáles son los píxeles físicamente?
-# Imprimimos sus coordenadas (fila, columna)
-for nombre, atributos in subconjuntos.items():
-    print(f"\n{nombre}:")
-    for attr in atributos:
-        pixel_idx = int(attr.replace('pixel', ''))
-        fila = pixel_idx // 28
-        col = pixel_idx % 28
-        print(f"  - {attr}: [Fila {fila}, Col {col}]")
 
 # %% 2.c)
 
@@ -528,7 +427,7 @@ for nombre, atributos in subconjuntos_peor_varianza.items():
     precision_test_peores.append(accuracy_score(y_test, predicciones_test)*100)
 
 cantidades = [3, 10, 50, 100, 200]
-# GrÃ¡fico de LÃ­neas
+# Grafico de li­neas
 plt.figure(figsize=(14, 8))
 plt.plot(cantidades, precision_train_mejores, marker='o', linewidth=3, markersize=10,
          label='Train Data | Píxeles con Mayor Varianza', color='#1F77B4', linestyle='--')
@@ -545,13 +444,17 @@ plt.xticks(cantidades, fontsize=16)
 plt.yticks(fontsize=16)
 plt.legend(fontsize=16)
 plt.grid(True, linestyle='--', alpha=0.6)
+
+plt.savefig('graficos/pixeles_para_knn.png',  dpi=300, bbox_inches='tight', transparent=False)
 plt.show()
 
 # %% EJERCICIO 2.d: Variando el hiperparametro K
-# Usaremos el mejor conjunto de atributos (ej: Top 50) para buscar el mejor K
+# Usaremos el mejor conjunto de atributos del top 50 pixeles con mayor varianza para buscar el mejor K
 
 mejor_subconjunto = top_pixeles[:50]
-k_range = range(1, 21)  # Probamos de 1 a 20 vecinos
+
+# Probamos de 1 a 20 vecinos
+k_range = range(1, 21)  
 acc_train_k = []
 acc_test_k = []
 
@@ -576,6 +479,8 @@ plt.xticks(k_range, fontsize=16)
 plt.yticks(fontsize=16)
 plt.legend(fontsize=16)
 plt.grid(True, linestyle='--', alpha=0.6)
+
+plt.savefig('graficos/variar_k_vecinos.png',  dpi=300, bbox_inches='tight', transparent=False)
 plt.show()
 
 # Identificar el mejor K
@@ -606,15 +511,14 @@ X_dev_train, X_dev_test, y_dev_train, y_dev_test = train_test_split(
 
 # Verificacion de tamaños para el informe
 total = len(df)
-print(f" Tamaños de los conjuntos (Total: {total})")
-print('---')
-print(f"Desarrollo (Dev): {len(X_dev)} muestras ({len(X_dev)/total*100:.1f}%)")
+print(f"Tamaños de los conjuntos (Total: {total})")
+print(f"Desarrollo: {len(X_dev)} muestras ({len(X_dev)/total*100:.1f}%)")
 print(
     f"Evaluación Final (Held-out): {len(X_held_out)} muestras ({len(X_held_out)/total*100:.1f}%)")
 print(
-    f"  └─ Dev-Train: {len(X_dev_train)} muestras ({len(X_dev_train)/total*100:.1f}%)")
+    f"Dev-Train: {len(X_dev_train)} muestras ({len(X_dev_train)/total*100:.1f}%)")
 print(
-    f"  └─ Dev-Test (Val): {len(X_dev_test)} muestras ({len(X_dev_test)/total*100:.1f}%)")
+    f"Dev-Test: {len(X_dev_test)} muestras ({len(X_dev_test)/total*100:.1f}%)")
 
 # %%
 
@@ -644,6 +548,8 @@ plt.xticks(depth_range, fontsize=16)
 plt.yticks(fontsize=16)
 plt.legend(fontsize=16)
 plt.grid(True, linestyle='--', alpha=0.6)
+
+plt.savefig('graficos/profundidad_arbol.png',  dpi=300, bbox_inches='tight', transparent=False)
 plt.show()
 
 # Identificar la mejor profundidad
@@ -653,7 +559,11 @@ max_exactitud = max(tree_test_precision)
 print(
     f"La mejor profundidad encontrada es: {mejor_profundidad} con una exactitud de {max_exactitud:.4f}")
 # Profundidad 8
-print(tree_test_precision[9])
+print("8:", tree_test_precision[7])
+# Profundidad 9
+print("9:", tree_test_precision[8])
+# Profundidad 10
+print("10:", tree_test_precision[9])
 # Profundidad 12
 print(tree_test_precision[11])
 # Profundidad 14
@@ -664,162 +574,120 @@ print(tree_test_precision[18])
 # Probablemente la mejor profundidad se encuentre entre 8 y el 12. Ya despues del 12 empieza a aparecer overfitting
 
 
-# %% Punto 3.c)
 
-# Experimento de Selección con K-Folding
+#%% Punto 3.C)
+# Seleccion de hiperparametros. Aqui vamos a comparar gini, entropia y profundidad del arbol
 
-# Definimos el rango limitado entre 1 y 10 de profundidad
-depth_range_consigna = range(1, 11)
-promedios_cv = []
-
-print("Iniciando validación cruzada (K-Folding)...")
-
-for d in depth_range_consigna:
-    model = DecisionTreeClassifier(max_depth=d, random_state=0)
-
-    # Usamos cross_val_score sobre todo el conjunto X_dev
-    scores = cross_val_score(model, X_dev, y_dev, cv=5)
-    promedios_cv.append(scores.mean())
-    print(f"Profundidad {d}: Exactitud promedio CV = {scores.mean():.4f}")
-
-# Seleccionamos el mejor modelo según la consigna
-mejor_prof_cv = depth_range_consigna[np.argmax(promedios_cv)]
-mejor_score_cv = max(promedios_cv)
-
-print(f"La mejor configuración es max_depth = {mejor_prof_cv}")
-print(f"Performance (Exactitud promedio CV): {mejor_score_cv * 100:.2f}%")
-
-
-# Gráfico de validación cruzada
-plt.figure(figsize=(10, 6))
-plt.plot(depth_range_consigna, promedios_cv, marker='o',
-         linestyle='-', color='forestgreen', linewidth=2)
-plt.xlabel("Profundidad Máxima (max_depth)")
-plt.ylabel("Exactitud Promedio (Mean CV Accuracy)")
-plt.xticks(depth_range_consigna)
-plt.grid(True, alpha=0.3)
-# Resaltamos el punto óptimo
-plt.axvline(mejor_prof_cv, color='red', linestyle='--',
-            label=f'Mayor Exactitud : Profundidad = {mejor_prof_cv}')
-plt.legend()
-plt.show()
-
-#%% ALTERNATIVA 3.C)
-# Selección de Hiperparámetros (Grid Search con K-Folding)
-
-
-# Definimos los espacios de búsqueda según la consigna y la teoría
 criterios = ['gini', 'entropy']
+
+# Profundidad entre 1 y 10
 profundidades = range(1, 11)
 
 resultados = []
 
-print("Iniciando búsqueda en grilla de hiperparámetros (5-Fold CV)...")
+print("Inicio del kfolding")
 
 # Exploramos todas las combinaciones posibles
 for crit in criterios:
+    print(f"va el criterio {crit}")
     for prof in profundidades:
-        model = DecisionTreeClassifier(criterion=crit, max_depth=prof, random_state=0)
+        print(f"va en profundidad {prof}")
+        arbol = DecisionTreeClassifier(criterion=crit, max_depth=prof, random_state=0)
         
-        # Validación cruzada sobre el conjunto de desarrollo
-        scores = cross_val_score(model, X_dev, y_dev, cv=5)
+        # Validación cruzada sobre el conjunto de desarrollo. EL cv divide la data 5 folds de forma que quede un 20% de datos de test para cada calculo de la exactitud
+        exactitud = cross_val_score(arbol, X_dev, y_dev, cv=5)
         
         # Guardamos los resultados
         resultados.append({
             'Criterio': crit,
             'Profundidad': prof,
-            'Exactitud_Media_CV': scores.mean()
+            'Exactitud_Media_CV': exactitud.mean()
         })
+        #%%
 
-# Convertimos a DataFrame para analizar los resultados fácilmente
-df_resultados = pd.DataFrame(resultados)
+# Pasar los resultados a un DF
+df_resultados_hip = pd.DataFrame(resultados)
 
-# Encontramos la configuración con la mejor exactitud
-mejor_config = df_resultados.loc[df_resultados['Exactitud_Media_CV'].idxmax()]
+# Configuracion con la mejor exactitud
+mejor_config = df_resultados_hip.loc[df_resultados_hip['Exactitud_Media_CV'].idxmax()]
 
-print("\n--- MEJOR CONFIGURACIÓN ENCONTRADA ---")
-print(f"Criterio Óptimo: {mejor_config['Criterio']}")
-print(f"Profundidad Óptima: {mejor_config['Profundidad']}")
-print(f"Performance (Exactitud CV): {mejor_config['Exactitud_Media_CV'] * 100:.2f}%")
+print("Mejor configuracion encontrada")
+print(f"Mejor criterio: {mejor_config['Criterio']}")
+print(f"Profundidad optima: {mejor_config['Profundidad']}")
+print(f"Mejor exactitud: {mejor_config['Exactitud_Media_CV'] * 100:.2f}%")
 
+
+for crit in criterios:
+    fila = df_resultados_hip[(df_resultados_hip['Criterio'] == crit) & (df_resultados_hip['Profundidad'] == 9)]
+    exactitud = fila['Exactitud_Media_CV'].values[0]
+    print(f"Criterio: {crit} | Profundidad: 9 | Exactitud Media CV: {exactitud*100:.2f}%")
+    
 #%% 
-import seaborn as sns
 plt.figure(figsize=(10, 6))
-# Graficamos las dos curvas usando el DataFrame que me pasaste
-sns.lineplot(data=df_resultados, x='Profundidad', y='Exactitud_Media_CV', hue='Criterio', marker='o')
 
-plt.title('Desempeño del Árbol de Decisión: Entropía vs Gini (5-Fold CV)')
-plt.xlabel('Profundidad Máxima del Árbol')
-plt.ylabel('Exactitud Media (Cross-Validation)')
-plt.xticks(range(1, 11))
+# Funcion para hacer el grafico cada curva (una curva por criterio)
+for criterio in df_resultados_hip['Criterio'].unique():
+    # Filtro el DF para el criterio actual
+    subset = df_resultados_hip[df_resultados_hip['Criterio'] == criterio]
+    
+    # Le cambio el nombre para que en la leyenda aparezcan como gini y entropia con mayuscula y bien escritos 
+    nombre_label = "Gini" if "gini" in str(criterio).lower() else "Entropía"
+    
+    plt.plot(subset['Profundidad'], subset['Exactitud_Media_CV']*100, marker='o', label=nombre_label)
+
+plt.xlabel('Profundidad Máxima del Árbol', fontsize=18)
+plt.ylabel('Exactitud Media [%]', fontsize=18)
+plt.xticks(range(1, 11), fontsize=16)
+plt.yticks(fontsize=16)
 plt.grid(True, linestyle='--', alpha=0.7)
-plt.legend(title='Criterio de Impureza')
+plt.legend(title='Criterio de Impureza', fontsize=16, title_fontsize=16)
 plt.tight_layout()
+
+plt.savefig('graficos/criterio_impureza.png',  dpi=300, bbox_inches='tight', transparent=False)
 plt.show()
-# %% Punto 3.d)
-# Evaluación final del modelo SELECCIONADO (Depth 10)
-"""
-modelo_seleccionado = DecisionTreeClassifier(max_depth=10, random_state=0)
-modelo_seleccionado.fit(X_dev, y_dev)  # Re-entrenamos con todo Dev
+#%%
+subset = df_resultados_hip[df_resultados_hip['Criterio'] == 'gini']
+porcentajes = (subset['Exactitud_Media_CV']*100).round(2)
+print(f"Exactitud media valores {porcentajes}")
 
-exactitud_final_legal = modelo_seleccionado.score(X_held_out, y_held_out)
+# Decidimos elegir profundidad=9 porque la diferencia en exactitud con la profundidad 10 es de cerca de 1.2%, sin embargo el modelo se vuelve mas sencillo y rapido de ejecutar
+# %% 
+# 3.d) Evaluacion Held-out
 
-print(
-    f"Exactitud final en Held-out (Modelo Depth 10): {exactitud_final_legal * 100:.2f}%")
-"""
-# hay que meterle metricas de test a esto. Exactitud y Matriz de Confusion
-
-# Punto 3.d) Evaluación Final: Exactitud y Matriz de Confusión
-
-from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
-"""
-# Punto 3.d) Evaluación Final sobre Held-out
-
-# 1. Entrenamiento final con el hiperparámetro seleccionado (depth=10)
-# Se utiliza el conjunto de Desarrollo completo (X_dev, y_dev) [cite: 311, 350]
-modelo_final = DecisionTreeClassifier(max_depth=10, random_state=0)
+# Entrenamiento con el mejor hiperparámetro (profundidad 9 y entropia) usando todos los datos del conjunto de desarrollo como entrenamiento del modelo
+modelo_final = DecisionTreeClassifier(criterion='entropy', max_depth=9, random_state=0)
 modelo_final.fit(X_dev, y_dev)
 
-# 2. Evaluación ÚNICA sobre el conjunto Held-out [cite: 325]
+# Usamos el conjunto Held-out
 exactitud_final = modelo_final.score(X_held_out, y_held_out)
 
-# 3. Matriz de Confusión para análisis de errores [cite: 677, 1037]
+# Crear una matriz de confusion para comparar que letras se confundieron mas con otras
 y_pred = modelo_final.predict(X_held_out)
 cm = confusion_matrix(y_held_out, y_pred)
 
-print("--- RESULTADO DEFINITIVO ---")
-print(f"Exactitud final en datos no vistos (Held-out): {exactitud_final * 100:.2f}%")
+print(f"Exactitud final en datos del held out: {exactitud_final * 100:.2f}%")
 
-"""
-#  Punto 3.d) Evaluación Final sobre Held-out
-
-# 1. Entrenamiento final con el MEJOR hiperparámetro (entropy, depth=10)
-modelo_final = DecisionTreeClassifier(criterion='entropy', max_depth=10, random_state=0)
-modelo_final.fit(X_dev, y_dev)
-
-# 2. Evaluación ÚNICA sobre el conjunto Held-out
-exactitud_final = modelo_final.score(X_held_out, y_held_out)
-
-# 3. Matriz de Confusión para análisis de errores
-y_pred = modelo_final.predict(X_held_out)
-cm = confusion_matrix(y_held_out, y_pred)
-
-print("--- RESULTADO DEFINITIVO ---")
-print(f"Exactitud final en datos no vistos (Held-out): {exactitud_final * 100:.2f}%")
-
-# (Dejá abajo tu código del plt.subplots para graficar la matriz de confusión)
-
-# Configuración visual para el informe
-fig, ax = plt.subplots(figsize=(14, 11))
+#%%
+# Plotear la matriz de confusion
+fig, ax = plt.subplots(figsize=(16, 13))
 letras = [chr(i) for i in range(ord('A'), ord('Z') + 1)] # Genera etiquetas A-Z
 disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=letras)
 
-# Graficamos con mapa de colores Blues para facilitar la lectura de la diagonal [cite: 1054]
+# Grafico de mapa de colores con la matriz de confusion. A mayor intensidad de color, mas cantidad de apariciones de esa celda en la matriz
 disp.plot(cmap='Blues', ax=ax, values_format='d', colorbar=True)
+plt.setp(disp.text_, fontsize=14)
 
-plt.title(f"Matriz de Confusión Final - Exactitud: {exactitud_final*100:.2f}%", fontsize=14)
-plt.xlabel("Etiqueta Predicha por el Modelo", fontsize=12)
-plt.ylabel("Etiqueta Real (Datos Held-out)", fontsize=12)
+# Para agregar un label a la barra del color
+cbar = disp.im_.colorbar
+cbar.set_label('Cantidad de Apariciones', fontsize=18, labelpad=20)
+cbar.ax.tick_params(labelsize=14)
+
+plt.xlabel("Etiqueta Predicha por el Modelo", fontsize=18)
+plt.ylabel("Etiqueta Real (Clasificada)", fontsize=18)
+plt.xticks(fontsize=16)
+plt.yticks(fontsize=16)
 plt.tight_layout()
+
+plt.savefig('graficos/matriz_confusion.png',  dpi=300, bbox_inches='tight', transparent=False)
 plt.show()
 
