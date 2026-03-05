@@ -23,7 +23,7 @@ from sklearn.tree import DecisionTreeClassifier
 
 directorio_script = os.path.dirname(os.path.abspath(__file__))
 
-data_ruta = os.path.join(directorio_script, "letras.csv.gz")
+data_ruta = os.path.join(directorio_script, "TP02-EnglishTypeAlphabet.csv")
 
 df = pd.read_csv(data_ruta, low_memory=False)
 
@@ -33,13 +33,10 @@ df = pd.read_csv(data_ruta, low_memory=False)
 print(df.shape)
 print(df.dtypes)
 
-# Cantidad de valores nulos (SACARIA ESTO)
-print(df.isnull().sum())
-
 
 print(df.head())
 
-# CANTIDAD DE VALORES POR LABEL
+# Cantidad de valores por label
 print(df['label'].value_counts().sort_index())
 
 # El output en consola dice que cada uno de los labels tiene 1016 valores, ninguno de ellos es nulo, todos son tipo int64
@@ -47,11 +44,11 @@ print(df['label'].value_counts().sort_index())
 
 cuentas = df['label'].value_counts().sort_index()
 
-# Imprimir el mí­nimo y máximo para el informe
+# Imprimir el minimo y maximo para el informe
 print(f"Clase con más datos: {cuentas.max()}")
 print(f"Clase con menos datos: {cuentas.min()}")
 
-# Verificar nulos (PODRIA IR CON LA VARIABLE DUPLICADOS)
+# Verificar nulos
 nulos_totales = df.isnull().sum().sum()
 print(f"Cantidad de valores nulos: {nulos_totales}")
 
